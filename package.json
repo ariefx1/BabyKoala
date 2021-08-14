@@ -1,0 +1,28 @@
+{
+  "name": "babykoala",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ariefx1/BabyKoala.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ariefx1/BabyKoala/issues"
+  },
+  "homepage": "https://github.com/ariefx1/BabyKoala#readme",
+  "devDependencies": {
+    "@types/node": "^16.6.1",
+    "eslint": "^7.32.0",
+    "typescript": "^4.3.5"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.26.0",
+    "discord.js": "^13.1.0"
+  }
+}

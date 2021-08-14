@@ -1,7 +1,5 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 
-const _dbclient = new DynamoDBClient({ region: 'ap-southeast-1' });
+const _dbClient = new DynamoDBClient({ region: process.env.AWS_REGION });
 
-export const dbclient: DynamoDBClient = _dbclient;
-
-export const USERS_TABLE_NAME: string = 'Users';
+export const dbClient: DynamoDBClient = _dbClient;

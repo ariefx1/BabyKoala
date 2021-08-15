@@ -9,7 +9,7 @@ import {
 } from "@aws-sdk/client-dynamodb";
 import { WaiterConfiguration, WaiterResult, WaiterState } from "@aws-sdk/util-waiter";
 import { dbClient } from "./client";
-import { SETTINGS_TABLE, USERS_POINTS_TABLE, USERS_TABLE } from "./models";
+import { SETTINGS_TABLE, USER_POINTS_TABLE, USERS_TABLE } from "./models";
 
 const createSettingsTable = async (): Promise<void> => {
   const createInput: CreateTableCommandInput = {
@@ -47,7 +47,9 @@ const createSettingsTable = async (): Promise<void> => {
     Item: {
       OwnerId: { S: process.env.DEFAULT_OWNER_ID! },
       LeaderboardRowCount: { N: '10' },
+      LoginId: { S: process.env.DEFAULT_LOGIN_ID! },
       MemberRole: { S: 'Current Members' },
+      Password: { S: process.env.DEFAULT_PASSWORD! },
       StartDate: { S: new Date(0).toISOString() },
       UpdateSchedule: { S: '0 * * * *' },
     }
@@ -121,7 +123,7 @@ const createUserPointsTable = async (): Promise<void> => {
         KeyType: 'RANGE',
       },
     ],
-    TableName: USERS_POINTS_TABLE,
+    TableName: USER_POINTS_TABLE,
     ProvisionedThroughput: {
       ReadCapacityUnits: 5,
       WriteCapacityUnits: 5,
@@ -130,7 +132,7 @@ const createUserPointsTable = async (): Promise<void> => {
   const command = new CreateTableCommand(input);
   try {
     await dbClient.send(command);
-    console.log(`DynamoDB: Successfully created ${USERS_POINTS_TABLE} table`);
+    console.log(`DynamoDB: Successfully created ${USER_POINTS_TABLE} table`);
   } catch (err: any) {
     console.log(`Error: ${err}`);
   }

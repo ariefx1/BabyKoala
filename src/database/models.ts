@@ -1,8 +1,8 @@
 import { AttributeValue } from "@aws-sdk/client-dynamodb";
 
 export const SETTINGS_TABLE: string = 'Settings';
+export const USER_POINTS_TABLE: string = 'UserPoints';
 export const USERS_TABLE: string = 'Users';
-export const USERS_POINTS_TABLE: string = 'UserPoints';
 
 class BaseModel {
   public static toModel(output: { [key: string]: AttributeValue; }): BaseModel {
@@ -21,7 +21,9 @@ export class Settings extends BaseModel {
   constructor(
     public OwnerId: string,
     public LeaderboardRowCount: number,
+    public LoginId: string,
     public MemberRole: string,
+    public Password: string,
     public StartDate: string,
     public UpdateSchedule: string,
   ) {
@@ -36,9 +38,9 @@ export class Settings extends BaseModel {
 export class User extends BaseModel {
   constructor(
     public Id: string,
-    public Name: string,
     public Date: string,
     public Handle: string,
+    public Name: string,
   ) {
     super();
   }
@@ -51,10 +53,10 @@ export class User extends BaseModel {
 export class UserPoint extends BaseModel {
   constructor(
     public UserId: string,
-    public Date: string,
-    public Game: string,
-    public Description: string,
     public Count: number,
+    public Date: string,
+    public Description: string,
+    public Game: string,
   ) {
     super();
   }

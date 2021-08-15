@@ -21,7 +21,7 @@ import {
   toDateString,
   User,
   UserPoint,
-  USERS_POINTS_TABLE,
+  USER_POINTS_TABLE,
   USERS_TABLE,
 } from './models';
 
@@ -113,7 +113,7 @@ export const getLeaderboard = async (game: string): Promise<string> => {
     const { StartDate, LeaderboardRowCount } = await getSettings();   
 
     const scanUserPointsInput: ScanCommandInput = {
-      TableName: USERS_POINTS_TABLE,
+      TableName: USER_POINTS_TABLE,
       ScanFilter: {
         Game: {
           AttributeValueList: [{ S: game }],
@@ -198,7 +198,7 @@ export const getUserRecord = async (id: string, game: string): Promise<string> =
   const getCommand = new GetItemCommand(getInput);
 
   const scanInput: ScanCommandInput = {
-    TableName: USERS_POINTS_TABLE,
+    TableName: USER_POINTS_TABLE,
     ScanFilter: {
       UserId: {
         AttributeValueList: [{ S: id }],

@@ -80,7 +80,7 @@ export const getLeaderboard = async (game: string): Promise<string> => {
         ScanFilter: {
           Id: {
             AttributeValueList: topUserIds,
-            ComparisonOperator: 'EQ'
+            ComparisonOperator: 'IN'
           },
         }
       };

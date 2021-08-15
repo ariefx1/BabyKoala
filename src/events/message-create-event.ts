@@ -22,7 +22,8 @@ export default class MessageCreateEvent implements BaseEvent {
       commands.forEach(({ name, description, options }) => { commandData.push({ name, description, options }) });
       await message.guild.commands.set(commandData);
       await message.reply('Commands deployed!');
-    } catch (_) {
+    } catch (err: any) {
+      console.log(`Error: ${err}`);
       return;
     }
 	}

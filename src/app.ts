@@ -4,7 +4,15 @@ import { join } from 'path';
 import { commands } from './commands/base-command';
 
 (async () => {
-  const options: ClientOptions = { intents: ['GUILD_MESSAGES', 'GUILDS'] };
+  const options: ClientOptions = {
+    intents: [
+      // Privileged Gateway Intents
+      'GUILD_MEMBERS',
+      // Non-privileged Gateway Intents
+      'GUILDS',
+      'GUILD_MESSAGES',
+    ],
+  };
   const client = new Client(options);
 
   // Commands

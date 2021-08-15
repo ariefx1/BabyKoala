@@ -2,6 +2,7 @@ import { Client, ClientOptions } from 'discord.js';
 import { readdirSync } from 'fs';
 import { join } from 'path';
 import { commands } from './commands/base-command';
+import { runScheduledTasks } from './scheduler/scheduler';
 
 (async () => {
   const options: ClientOptions = {
@@ -14,7 +15,6 @@ import { commands } from './commands/base-command';
     ],
   };
   const client = new Client(options);
-
   // Commands
   const commandDir: string = join(__dirname, 'commands');
   readdirSync(commandDir).forEach((commandFilename: string) => {
@@ -23,7 +23,6 @@ import { commands } from './commands/base-command';
     const command = new (require(dir).default)();
     commands.set(command.name, command);
   });
-
   // Events
   const eventDir: string = join(__dirname, 'events');
   readdirSync(eventDir).forEach((eventFilename: string) => {
@@ -33,5 +32,7 @@ import { commands } from './commands/base-command';
     client.on(event.name, event.handle);
   });
 
-  await client.login(process.env.BOT_TOKEN);
+  await client.login(process.env.BOT_TOKEN);  
+  // TODO: Uncomment during testing
+  // await runScheduledTasks(client);
 })();

@@ -18,6 +18,7 @@
   "homepage": "https://github.com/ariefx1/BabyKoala#readme",
   "devDependencies": {
     "@types/node": "^16.6.1",
+    "@types/node-cron": "^2.0.4",
     "@types/text-table": "^0.2.2",
     "dotenv": "^10.0.0",
     "eslint": "^7.32.0",
@@ -28,6 +29,7 @@
     "@aws-sdk/client-dynamodb": "^3.26.0",
     "@aws-sdk/util-waiter": "^3.25.0",
     "discord.js": "^13.1.0",
+    "node-cron": "^3.0.0",
     "text-table": "^0.2.0"
   }
 }

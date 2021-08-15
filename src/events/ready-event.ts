@@ -1,3 +1,4 @@
+import { Client } from 'discord.js';
 import BaseEvent from './base-event';
 
 export default class ReadyEvent implements BaseEvent {

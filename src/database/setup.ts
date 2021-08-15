@@ -46,9 +46,10 @@ const createSettingsTable = async (): Promise<void> => {
     TableName: SETTINGS_TABLE,
     Item: {
       OwnerId: { S: process.env.DEFAULT_OWNER_ID! },
+      LeaderboardRowCount: { N: '10' },
+      MemberRole: { S: 'Current Members' },
       StartDate: { S: new Date(0).toISOString() },
       UpdateSchedule: { S: '0 * * * *' },
-      LeaderboardRowCount: { N: '10' },
     }
   }
   const putCommand = new PutItemCommand(putInput);

@@ -1,11 +1,17 @@
 import {
   AttributeValue,
+  BatchWriteItemCommand,
+  BatchWriteItemInput,
   GetItemCommand,
   GetItemCommandInput,
   GetItemOutput,
   ScanCommand,
   ScanCommandInput,
   ScanCommandOutput,
+  UpdateItemCommand,
+  UpdateItemCommandInput,
+  UpdateItemCommandOutput,
+  WriteRequest,
 } from '@aws-sdk/client-dynamodb';
 import table from 'text-table';
 import { dbClient } from './client';
@@ -19,6 +25,78 @@ import {
   USERS_TABLE,
 } from './models';
 
+export const batchWriteUser = async (
+  discordUserHandleById: { [key: string]: string },
+  userIdsToAdd: string[],
+  userIdsToRemove: string[],
+): Promise<void> => {
+  const input: BatchWriteItemInput = {
+    RequestItems: {
+      [USERS_TABLE]: [
+        ...putUserRequest(discordUserHandleById, userIdsToAdd),
+        ...deleteUserRequest(userIdsToRemove),
+      ]
+    }
+  };
+  const command = new BatchWriteItemCommand(input);
+  try {
+    await dbClient.send(command);
+  } catch (err: any) {
+    console.log(`Error: ${err}`);
+  }
+};
+
+const deleteUserRequest = (userIdsToRemove: string[]): WriteRequest[] => {
+  return userIdsToRemove.map(userId => ({
+    DeleteRequest: {
+      Key: {
+        Id: { S: userId },
+      },
+    },
+  }));
+};
+
+const putUserRequest = (
+  discordUserHandleById: { [key: string]: string },
+  userIdsToAdd: string[]
+): WriteRequest[] => {
+  return userIdsToAdd.map(userId => ({
+    PutRequest: {
+      Item: {
+        Id: { S: userId },
+        Date: { S: new Date().toISOString() },
+        Handle: { S: discordUserHandleById[userId] },
+      },
+    },
+  }));
+};
+
+export const batchUpdateUser = async (
+  discordUserHandleById: { [key: string]: string },
+  userIdsToUpdate: string[]
+): Promise<void> => {
+  try {
+    const updatePromises: Promise<UpdateItemCommandOutput>[] = [];
+    userIdsToUpdate.forEach(userId => {
+      const input: UpdateItemCommandInput = {
+        TableName: USERS_TABLE,
+        Key: {
+          Id: { S: userId },
+        },
+        UpdateExpression: 'SET Handle = :h',
+        ExpressionAttributeValues: {
+          ':h': { S: discordUserHandleById[userId] },
+        },
+      };
+      const command = new UpdateItemCommand(input);
+      updatePromises.push(dbClient.send(command));
+    });
+    await Promise.all(updatePromises);
+  } catch (err: any) {
+    console.log(`Error: ${err}`);
+  }
+};
+
 export const getSettings = async (): Promise<Settings> => {
   const scanSettingsInput: ScanCommandInput = {
     TableName: SETTINGS_TABLE,
@@ -28,7 +106,7 @@ export const getSettings = async (): Promise<Settings> => {
   const scanSettingsOutput: ScanCommandOutput = await dbClient.send(scanSettingsCommand);
   if (scanSettingsOutput.Items?.length === 0) throw new Error('Settings not found');
   return Settings.toModel(scanSettingsOutput.Items![0]!); 
-}
+};
 
 export const getLeaderboard = async (game: string): Promise<string> => {
   try {
@@ -110,7 +188,7 @@ export const getLeaderboard = async (game: string): Promise<string> => {
     console.log(`Error: ${err}`);
     return 'Sorry, data is not available';
   }
-}
+};
 
 export const getUserRecord = async (id: string, game: string): Promise<string> => {
   const getInput: GetItemCommandInput = {
@@ -162,4 +240,4 @@ export const getUserRecord = async (id: string, game: string): Promise<string> =
     console.log(`Error: ${err}`);
     return 'Sorry, data is not available';
   }
-}
+};

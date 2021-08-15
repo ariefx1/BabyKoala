@@ -20,9 +20,10 @@ class BaseModel {
 export class Settings extends BaseModel {
   constructor(
     public OwnerId: string,
+    public LeaderboardRowCount: number,
+    public MemberRole: string,
     public StartDate: string,
     public UpdateSchedule: string,
-    public LeaderboardRowCount: number,
   ) {
     super();
   }

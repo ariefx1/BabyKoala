@@ -1,4 +1,4 @@
-import { ObjectId } from "mongodb";
+import { Document, ObjectId } from "mongodb";
 
 export const DATABASE_NAME: string = 'DatabaseKoala';
 export const SETTINGS_COLLECTION: string = 'Settings';
@@ -18,7 +18,6 @@ export interface Settings extends BaseDocument {
 
 export interface User extends BaseDocument {
   id: string;
-  tag: string;
 }
 
 export interface UserPoint extends BaseDocument {

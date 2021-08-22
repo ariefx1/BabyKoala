@@ -48,9 +48,9 @@ export const queryLeaderboard = async (game: string): Promise<string> => {
         ids.push(...userIdsByCount[count]);
         return ids;
       }, []);
-      const users = await usersCollection.find({ id: { $in: topUserIds }}).toArray();
-      const nameByUserId = users.reduce((output: { [key: string]: string }, user: User) => {
-        output[user.id] = user.tag;
+      const userTags = await queryUserTagsByIds(topUserIds);
+      const nameByUserId = topUserIds.reduce((output: { [key: string]: string }, id: string, index: number) => {
+        output[id] = userTags[index];
         return output;
       }, {});
 
@@ -109,16 +109,11 @@ export const queryUsers = async (): Promise<User[]> => {
   return await usersCollection.find({}).toArray();
 }
 
-export const writeUsers = async (
-  idsToInsert: string[],
-  idsToDelete: string[],
-): Promise<void> => {
+export const writeUsers = async (idsToInsert: string[], idsToDelete: string[]): Promise<void> => {
   try {
     await usersCollection.bulkWrite([
-      // Insert
       ...idsToInsert.map(id => ({ insertOne: { document: { id } as User } })),
-      // Delete
-      { deleteMany: { filter: { $in: [idsToDelete] } } },
+      ...idsToDelete.map(id => ({ deleteOne: { filter: { id } } })),
     ]);
   } catch (error: any) {
     console.log(`Mongo: ${error}`);

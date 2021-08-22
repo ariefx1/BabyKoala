@@ -8,7 +8,7 @@ const usersSyncTask = async () => {
     try {
       const discordUserIds: string[] = Array.from((await queryDiscordUsers()).keys());
       const mongoUserIds: string[] = (await queryUsers()).map(u => u.id);
-      const userIdsToInsert: string[] = Object.keys(discordUserIds).filter(id => !mongoUserIds?.includes(id));
+      const userIdsToInsert: string[] = discordUserIds.filter(id => !mongoUserIds?.includes(id));
       const userIdsToDelete = mongoUserIds.filter(id => !discordUserIds.includes(id));
       await writeUsers(userIdsToInsert, userIdsToDelete);
     } catch (err: any) {

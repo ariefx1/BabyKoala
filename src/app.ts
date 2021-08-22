@@ -1,11 +1,10 @@
 import { mongoClientConnect } from './mongo/client';
 import { discordClientConnect } from './discord/client';
-import { startTasks } from './task/tasks';
+import { startTasks } from './cron/tasks';
 
 // Bootstrap
 (async () => {
   await mongoClientConnect();
   await discordClientConnect();
-  // TODO:
-  // await startTasks();
+  await startTasks();
 })();

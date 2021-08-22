@@ -111,10 +111,12 @@ export const queryUsers = async (): Promise<User[]> => {
 
 export const writeUsers = async (idsToInsert: string[], idsToDelete: string[]): Promise<void> => {
   try {
-    await usersCollection.bulkWrite([
-      ...idsToInsert.map(id => ({ insertOne: { document: { id } as User } })),
-      ...idsToDelete.map(id => ({ deleteOne: { filter: { id } } })),
-    ]);
+    if (idsToInsert.length > 0 || idsToDelete.length > 0) {
+      await usersCollection.bulkWrite([
+        ...idsToInsert.map(id => ({ insertOne: { document: { id } as User } })),
+        ...idsToDelete.map(id => ({ deleteOne: { filter: { id } } })),
+      ]);
+    }
   } catch (error: any) {
     console.log(`Mongo: ${error}`);
   }

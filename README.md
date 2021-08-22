@@ -4,11 +4,11 @@
 
 Discord Bot for Monash Esports Club
 
-## Components
+## Modules
 
-- **Discord** - The discord.js module for interacting with Discord's official API. Additionally, it uses the guild members fetch function to retrieve all the currently registered members.
-- **MongoDB** - To persist settings, users and user points data, this bot uses a NoSQL database, MongoDB, to be able to synchronize data.
-- **node-cron** - This library allows for easy scheduling with cron expression. The schedule is retrieved from the `Settings` table in MongoDB.
+- **discord** - The `discord.js` module for interacting with Discord's official API. Additionally, it uses the guild members fetch function to retrieve all the currently registered members.
+- **mongo** - A NoSQL database that allows the bot to persist and synchronize settings, users and user points data.
+- **cron** - The `node-cron` module allows for easy schedule users data synchronization with a cron expression. The schedule is stored in the `Settings` collection.
 
 ## Commands
 

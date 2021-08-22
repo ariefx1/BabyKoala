@@ -1,6 +1,6 @@
 import { ApplicationCommandData, Message } from 'discord.js';
+import { querySettings } from '../../mongo/queries';
 import { commands } from '../commands/base-command';
-import { getSettings } from '../database/commands';
 import BaseEvent from './base-event';
 
 export default class MessageCreateEvent implements BaseEvent {
@@ -14,9 +14,9 @@ export default class MessageCreateEvent implements BaseEvent {
       if (message.content !== '!deploy') return;
       
       // Verify ownership
-      const { OwnerId } = await getSettings();
-      if (message.author.id !== OwnerId) return;
-      
+      const { ownerId } = await querySettings();
+      if (message.author.id !== ownerId) return;
+
       // Deploy commands
       const commandData: ApplicationCommandData[] = [];
       commands.forEach(({ name, description, options }) => { commandData.push({ name, description, options }) });

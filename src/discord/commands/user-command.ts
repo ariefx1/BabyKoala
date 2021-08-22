@@ -1,6 +1,6 @@
-import { ApplicationCommandOptionData, CommandInteraction, InteractionDeferReplyOptions } from "discord.js";
-import { getUserRecord } from "../database/commands";
-import BaseCommand from "./base-command";
+import { ApplicationCommandOptionData, CommandInteraction, InteractionDeferReplyOptions } from 'discord.js';
+import { queryUserRecord } from '../../mongo/queries';
+import BaseCommand from './base-command';
 
 export default class UserCommand implements BaseCommand {
   public readonly name: string = 'user';
@@ -13,11 +13,10 @@ export default class UserCommand implements BaseCommand {
   }];
 
   public async execute(interaction: CommandInteraction): Promise<void> {
-    const options: InteractionDeferReplyOptions = { ephemeral: true }
+    const options: InteractionDeferReplyOptions = { ephemeral: true };
     await interaction.deferReply(options);
     const userId: string = interaction.user.id;
     const game = interaction.options.get('game')!.value! as string;
-    const reply = await getUserRecord(userId, game);
-    await interaction.followUp(reply);
+    await interaction.followUp(await queryUserRecord(userId, game));
   }
 }

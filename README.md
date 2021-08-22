@@ -1,5 +1,7 @@
 # Baby Koala
 
+![](logo.jpg)
+
 Discord Bot for Monash Esports Club
 
 ## Components

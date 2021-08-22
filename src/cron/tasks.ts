@@ -1,6 +1,6 @@
-import { schedule } from "node-cron";
-import { queryDiscordUsers } from "../discord/queries";
-import { querySettings, queryUsers, writeUsers } from "../mongo/queries";
+import { schedule } from 'node-cron';
+import { queryDiscordUsers } from '../discord/queries';
+import { querySettings, queryUsers, writeUsers } from '../mongo/queries';
 
 const usersSyncTask = async () => {
   const { memberUpdateSchedule } = await querySettings();

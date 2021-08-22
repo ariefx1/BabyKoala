@@ -50,22 +50,27 @@ export const queryLeaderboard = async (game: string): Promise<string> => {
       }, []);
       const userTags = await queryUserTagsByIds(topUserIds);
       const nameByUserId = topUserIds.reduce((output: { [key: string]: string }, id: string, index: number) => {
-        output[id] = userTags[index];
+        if (userTags[index]) output[id] = userTags[index]!;
         return output;
       }, {});
 
       // Get top user records
-      topCounts.forEach((count: number, index: number) => {
+      let position: number = 1;
+      topCounts.forEach((count: number) => {
         userIdsByCount[count].forEach(userId => {
-          records.push([index + 1, nameByUserId[userId], count]);
+          if (nameByUserId[userId]) {
+            // Increment position when it's not the first record and not a tie
+            if (records.length > 0 && count !== records[records.length - 1][2]) position++;
+            records.push([position, nameByUserId[userId]!, count]);
+          }
         });
       });
     }
 
     return codeBlock(
       `Leaderboard: ${game}\n\n` +
-      table([headers, ...records], { hsep: '     '})
-    )
+      table([headers, ...records], { hsep: '     ' })
+    );
   } catch (error: any) {
     console.log(`Mongo: ${error}`);
     return 'Sorry, data is not available';
@@ -120,4 +125,10 @@ export const writeUsers = async (idsToInsert: string[], idsToDelete: string[]): 
   } catch (error: any) {
     console.log(`Mongo: ${error}`);
   }
+};
+
+export const testImportData = async (data: UserPoint[]) => {
+  await userPointsCollection.bulkWrite([
+    ...data.map((u: UserPoint) => ({ insertOne : { document: u } }))
+  ]);
 };

@@ -11,5 +11,5 @@ export const queryDiscordUsers = async () => {
 
 export const queryUserTagsByIds = async (ids: string[]) => {
   const currentMembers = await queryDiscordUsers();
-  return ids.map(id => currentMembers.get(id)!.user.tag);
+  return ids.map(id => currentMembers.get(id)?.user.tag);
 };

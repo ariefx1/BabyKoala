@@ -23,7 +23,10 @@ export const queryLeaderboard = async (game: string): Promise<string> => {
     const { seasonStartDate } = await querySettings();   
 
     // Get user records
-    const userPoints = await userPointsCollection.find({ game, date: { $gte: seasonStartDate } }).toArray();
+    const userPoints = await userPointsCollection.find({
+      date: { $gte: seasonStartDate },
+      game: new RegExp(['^', game, '$'].join(''), 'i'),
+    }).toArray();
     const headers: string[] = ['Position', 'Tag', 'Total Points'];
     const records: [number, string, number][] = [];
     if (userPoints.length > 0) {
@@ -68,7 +71,7 @@ export const queryLeaderboard = async (game: string): Promise<string> => {
     }
 
     return codeBlock(
-      `Leaderboard: ${game}\n\n` +
+      `Leaderboard: ${userPoints[0]?.game ?? game}\n\n` +
       table([headers, ...records], { hsep: '     ' })
     );
   } catch (error: any) {
@@ -90,7 +93,10 @@ export const queryUserRecord = async (id: string, game: string): Promise<string>
     if (!tag) throw new Error('User not found');
 
     // Get user points
-    const userPoints = await userPointsCollection.find({ userId: id, game: game }).toArray();
+    const userPoints = await userPointsCollection.find({
+      userId: id,
+      game: new RegExp(['^', game, '$'].join(''), 'i'),
+    }).toArray();
     let points: number = 0;
     const headers: string[] = ['Date', 'Description', 'Points'];
     const records: [string, string, number][] = userPoints.map(({ date, description, count }) => {
@@ -100,12 +106,12 @@ export const queryUserRecord = async (id: string, game: string): Promise<string>
 
     return codeBlock(
       `Tag: ${tag}\n` +
-      `Game: ${game}\n\n` +
+      `Game: ${userPoints[0]?.game ?? game}\n\n` +
       `${table([headers, ...records], { hsep: '     ' })}\n\n` +
       `Total Points: ${points}`
     );
   } catch (error: any) {
-    console.log(`Mongo: {error}`);
+    console.log(`Mongo: ${error}`);
     return 'Sorry, data is not available';
   }
 };
@@ -118,8 +124,8 @@ export const writeUsers = async (idsToInsert: string[], idsToDelete: string[]): 
   try {
     if (idsToInsert.length > 0 || idsToDelete.length > 0) {
       await usersCollection.bulkWrite([
-        ...idsToInsert.map(id => ({ insertOne: { document: { id } as User } })),
-        ...idsToDelete.map(id => ({ deleteOne: { filter: { id } } })),
+        ...idsToInsert.map(_id => ({ insertOne: { document: { _id } } })),
+        ...idsToDelete.map(_id => ({ deleteOne: { filter: { _id } } })),
       ]);
     }
   } catch (error: any) {
@@ -127,8 +133,11 @@ export const writeUsers = async (idsToInsert: string[], idsToDelete: string[]): 
   }
 };
 
-export const testImportData = async (data: UserPoint[]) => {
-  await userPointsCollection.bulkWrite([
-    ...data.map((u: UserPoint) => ({ insertOne : { document: u } }))
+export const testImportData = async (users: User[], userPoints: UserPoint[]) => {
+  if (users.length > 0) await usersCollection.bulkWrite([
+    ...users.map((u: User) => ({ insertOne : { document: u } }))
+  ]);
+  if (userPoints.length > 0) await userPointsCollection.bulkWrite([
+    ...userPoints.map((u: UserPoint) => ({ insertOne : { document: u } }))
   ]);
 };

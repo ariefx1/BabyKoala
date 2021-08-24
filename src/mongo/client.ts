@@ -9,7 +9,7 @@ if (!mongoUserName || !mongoPassword) {
 
 // Initialize MongoDB Client Instance
 const URI: string = `mongodb+srv://${mongoUserName}:${encodeURIComponent(mongoPassword)}` +
-  '@cluster0.bvvpc.mongodb.net/myFirstDatabase?retryWrites=true&w=majority';
+  '@clusterkoala.suucn.mongodb.net/myFirstDatabase?retryWrites=true&w=majority';
 const _mongoClient: MongoClient = new MongoClient(URI);
 export const mongoClient = _mongoClient;
 export const mongoClientConnect = async () => new Promise<void>((resolve, reject) => {

@@ -6,10 +6,11 @@ export const USER_POINTS_COLLECTION: string = 'UserPoints';
 export const USERS_COLLECTION: string = 'Users';
 
 interface BaseDocument extends Document {
-  _id: ObjectId;
+  _id: ObjectId | string;
 }
 
 export interface Settings extends BaseDocument {
+  _id: ObjectId;
   memberRole: string;
   memberUpdateSchedule: string;
   ownerId: string;
@@ -17,10 +18,11 @@ export interface Settings extends BaseDocument {
 }
 
 export interface User extends BaseDocument {
-  id: string;
+  _id: string;
 }
 
 export interface UserPoint extends BaseDocument {
+  _id: ObjectId;
   count: number;
   date: Date;
   description: string;

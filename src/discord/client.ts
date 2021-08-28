@@ -3,7 +3,7 @@ import { readdirSync } from "fs";
 import { join } from "path";
 import { commands } from "./commands/base-command";
 
-const discordToken: string | undefined = process.env.BOT_TOKEN;
+const discordToken: string | undefined = process.env.DISCORD_TOKEN;
 
 if (!discordToken) {
   throw new Error('Discord: Token is not provided');

@@ -1,5 +1,4 @@
 import { Collection, Db } from 'mongodb';
-import table from 'text-table';
 import { queryUserTagsByIds } from '../discord/queries';
 import { mongoClient } from './client';
 import {
@@ -11,6 +10,7 @@ import {
   USERS_COLLECTION,
   DATABASE_NAME,
 } from './documents';
+import EasyTable from 'easy-table';
 
 const codeBlock = (value: string): string => '```' + value + '```';
 const mongoDBInstance: Db = mongoClient.db(DATABASE_NAME);
@@ -27,8 +27,7 @@ export const queryLeaderboard = async (game: string): Promise<string> => {
       date: { $gte: seasonStartDate },
       game: new RegExp(['^', game, '$'].join(''), 'i'),
     }).toArray();
-    const headers: string[] = ['Position', 'Tag', 'Total Points'];
-    const records: [number, string, number][] = [];
+    const records: { Position: number, Tag: string, "Total Points": number }[] = [];
     if (userPoints.length > 0) {
       // Get top user ids
       const countByUserId = userPoints.reduce((output: {[key: string]: number}, userPoint: UserPoint) => {
@@ -45,7 +44,7 @@ export const queryLeaderboard = async (game: string): Promise<string> => {
       }, {});
       const topCounts = Object.keys(userIdsByCount).map(k => Number(k));
       topCounts.sort((a, b) => b - a);
-      
+
       // Get top user tags
       const topUserIds = topCounts.reduce((ids: string[], count) => {
         ids.push(...userIdsByCount[count]);
@@ -63,17 +62,14 @@ export const queryLeaderboard = async (game: string): Promise<string> => {
         userIdsByCount[count].forEach(userId => {
           if (nameByUserId[userId]) {
             // Increment position when it's not the first record and not a tie
-            if (records.length > 0 && count !== records[records.length - 1][2]) position++;
-            records.push([position, nameByUserId[userId]!, count]);
+            if (records.length > 0 && count !== records[records.length - 1]["Total Points"]) position++;
+            records.push({ Position: position, Tag: nameByUserId[userId]!, "Total Points": count });
           }
         });
       });
     }
 
-    return codeBlock(
-      `Leaderboard: ${userPoints[0]?.game ?? game}\n\n` +
-      table([headers, ...records], { hsep: '     ' })
-    );
+    return codeBlock(`Leaderboard: ${userPoints[0]?.game ?? game}\n\n${EasyTable.print(records)}`);
   } catch (error: any) {
     console.log(`Mongo: ${error}`);
     return 'Sorry, data is not available';
@@ -98,16 +94,16 @@ export const queryUserRecord = async (id: string, game: string): Promise<string>
       game: new RegExp(['^', game, '$'].join(''), 'i'),
     }).toArray();
     let points: number = 0;
-    const headers: string[] = ['Date', 'Description', 'Points'];
-    const records: [string, string, number][] = userPoints.map(({ date, description, count }) => {
-      points += count;
-      return [date.toLocaleDateString('en-MY'), description, count]
-    });
+    const records: { Date: string, Description: string, Points: number }[] = userPoints
+      .map(({ date, description, count }) => {
+        points += count;
+        return { Date: date.toLocaleDateString('en-MY'), Description: description, Points: count };
+      });
 
     return codeBlock(
       `Tag: ${tag}\n` +
       `Game: ${userPoints[0]?.game ?? game}\n\n` +
-      `${table([headers, ...records], { hsep: '     ' })}\n\n` +
+      `${EasyTable.print(records)}\n\n` +
       `Total Points: ${points}`
     );
   } catch (error: any) {

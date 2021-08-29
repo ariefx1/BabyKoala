@@ -31,7 +31,7 @@ export const queryLeaderboard = async (
       date: { $gte: seasonStartDate },
       game: new RegExp(['^', game, '$'].join(''), 'i'),
     }).toArray();
-    
+
     if (userPoints.length === 0) throw 'No user points found';
     
     const positions: number[] = [];

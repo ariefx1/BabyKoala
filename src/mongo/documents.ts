@@ -21,9 +21,7 @@ export interface Settings extends BaseDocument {
   _id: ObjectId;
   memberRole: string;
   memberUpdateSchedule: string;
-  ownerId: string;
   seasonStartDate: Date;
-  committeeIds: string[];
 }
 
 export interface User extends BaseDocument {

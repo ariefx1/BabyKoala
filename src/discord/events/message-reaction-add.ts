@@ -25,9 +25,7 @@ export default class MessageReactionAddEvent implements BaseEvent {
   public async handle(
     reaction: MessageReaction | PartialMessageReaction,
     user: User | PartialUser
-  ): Promise<void> {
-    if (user.id !== '280167443832373258') return;
-    
+  ): Promise<void> {    
     try {
       // Ignore reactions on messages made by others
       if (reaction.message.author?.id !== DISCORD_CLIENT_ID) return;

@@ -58,13 +58,13 @@ export default class MessageReactionAddEvent implements BaseEvent {
 
       // Execute pagination
       if (MessageReactionAddEvent.isLeaderboardPaging(reaction)) {
-        MessageReactionAddEvent.page(
+        await MessageReactionAddEvent.page(
           reaction.message,
           emoji as PagingEmoji,
           MessageReactionAddEvent.pageLeaderboard,
           );
       } else {
-        MessageReactionAddEvent.page(
+        await MessageReactionAddEvent.page(
           reaction.message,
           emoji as PagingEmoji,
           MessageReactionAddEvent.pageUserRecord,

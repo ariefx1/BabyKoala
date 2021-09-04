@@ -58,9 +58,9 @@ export const writeUsers = async (idsToInsert: string[], idsToDelete: string[]): 
   }
 };
 
-export const queryGameMetadata = async (name: string): Promise<{ name?: string, color: ColorResolvable, logo: string }> => {
+export const queryGameMetadata = async (name: string): Promise<{ color: ColorResolvable, logo: string }> => {
   const game: Game | undefined = await gamesCollection.findOne({ name: name });
-  return { name: game?.name, color: (game?.color ?? '') as ColorResolvable, logo: game?.logo ?? '' };
+  return { color: (game?.color ?? '') as ColorResolvable, logo: game?.logo ?? '' };
 };
 
 // #endregion Collections

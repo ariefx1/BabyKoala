@@ -5,7 +5,7 @@ import { discordClient } from './client';
 export const MASTER_ID = '280167443832373258';
 export const DISCORD_ERROR_MESSAGE = 'Sorry, data is not available or obsolete';
 export const USER_RECORD_COLOR = '#ffffff';
-export const RECORDS_PER_PAGE = 10;
+export const RECORDS_PER_PAGE = 15;
 
 // #region Discord APIs
 
@@ -157,6 +157,9 @@ export const queryDiscordUserRecord = async (
 
     if (userPoints.length === 0) throw 'No user points found';
 
+    // Use game name stored in MongoDB
+    game = userPoints[0].game;
+
     // Build User Record
     let dates: string = '';
     let descriptions: string = '';
@@ -166,8 +169,7 @@ export const queryDiscordUserRecord = async (
       descriptions += `${description}\n`;
       points += `${count}\n`;
     });
-    const { name, logo } = await queryGameMetadata(game);
-    if (name) game = name;
+    const { logo } = await queryGameMetadata(game);
     const lastPage = Math.ceil(userPointsCount / RECORDS_PER_PAGE);
 
     return { embeds: [

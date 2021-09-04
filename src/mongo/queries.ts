@@ -59,8 +59,7 @@ export const writeUsers = async (idsToInsert: string[], idsToDelete: string[]): 
 };
 
 export const queryGameMetadata = async (name: string): Promise<{ name?: string, color: ColorResolvable, logo: string }> => {
-  const game: Game | undefined = await gamesCollection
-    .findOne({ name: new RegExp(['^', name, '$'].join(''), 'i'), });
+  const game: Game | undefined = await gamesCollection.findOne({ name: name });
   return { name: game?.name, color: (game?.color ?? '') as ColorResolvable, logo: game?.logo ?? '' };
 };
 
@@ -68,12 +67,23 @@ export const queryGameMetadata = async (name: string): Promise<{ name?: string, 
 
 // #region Commands
 
-export const queryDBLeaderboard = async (game: string): Promise<UserPointsGroup[]> => {
+export const queryDBLeaderboard = async (game: string, excludeLast: boolean = false): Promise<UserPointsGroup[]> => {
   const { seasonStartDate } = await querySettings();
+  let endDate: Date | undefined;
+  if (excludeLast) {
+    const { latestDate }: any = await userPointsCollection.aggregate([
+      { $group: { _id: null, latestDate: { $max: '$date' } } },
+      { $project: { _id: 0 } },
+    ]).next();
+    endDate = latestDate;
+  }
   // NOTE: Some members might have left the guild, do not use limit and skip
   return userPointsCollection.aggregate([
     // Filter out records prior to the seasonStartDate
-    { $match: { date: { $gte: seasonStartDate }, $text: { $search: game } } },
+    { $match: {
+      date: { $gte: seasonStartDate, ...(endDate ? { $lt: endDate } : {}) },
+      $text: { $search: game } }
+    },
     // Group by userId and game, and summarize total count as totalPoints per group
     { $group: { _id: { userId: '$userId', game: '$game' }, totalPoints: { $sum: '$count' } } },
     // Sort totalPoints in descending order

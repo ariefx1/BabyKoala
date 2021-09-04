@@ -58,9 +58,13 @@ export const queryDiscordLeaderboard = async (game: string, page: number): Promi
     game = dbLeaderboard[0]._id.game;
 
     // Build leaderboard
+    const members = await queryDiscordMembers();
+    // Calculate previous positions
+    const previousDBLeaderboard = await queryDBLeaderboard(game, true);
+    const previousPositionById = calculatePositionById(previousDBLeaderboard, members);
+    // Calculate current positions
     let position: number = 1;
     let previousTotalPoints: number = dbLeaderboard[0].totalPoints;
-    const members = await queryDiscordMembers();
     let count: number = 0;
     let positions: string = '';
     let userTags: string = '';
@@ -77,12 +81,12 @@ export const queryDiscordLeaderboard = async (game: string, page: number): Promi
       // Verify that user is on the current page
       if (Math.ceil(count / RECORDS_PER_PAGE) !== page) return;
       // Add user to leaderboard
-      positions += `${position}\n`;
-      userTags += `${userTag}\n`;
-      totalPoints += `${record.totalPoints}\n`;
+      positions += retrievePositionLabel(previousPositionById, record, position);
+      userTags += `\u200b\n${userTag}\n`;
+      totalPoints += `\u200b\n${record.totalPoints}\n`;
     }, []);
 
-    const totalPages = Math.ceil(count / RECORDS_PER_PAGE);
+    const totalPages: number = Math.ceil(count / RECORDS_PER_PAGE);
     const { color, logo } = await queryGameMetadata(game);
     const { name, iconURL } = await queryDiscordGuildMetadata();
     return { embeds: [
@@ -102,6 +106,40 @@ export const queryDiscordLeaderboard = async (game: string, page: number): Promi
   } catch (error: any) {
     console.log('Discord: ', Error);
     return { embeds: [ new MessageEmbed().setTitle(DISCORD_ERROR_MESSAGE) ] };
+  }
+};
+
+const calculatePositionById = (
+  DBLeaderboard: UserPointsGroup[],
+  members: Collection<string, GuildMember>,
+): { [key: string]: number } => {
+  if (DBLeaderboard.length === 0) return {};
+  let position: number = 1;
+  let previousTotalPoints: number = DBLeaderboard[0].totalPoints;
+  return DBLeaderboard.reduce((output: { [key: string]: number }, record: UserPointsGroup) => {
+    // Verify that user is a member
+    const userTag = members.get(record._id.userId)?.user.tag;
+    if (!userTag) return output;
+    // Increment position if totalPoints differ
+    if (record.totalPoints < previousTotalPoints) position++;
+    previousTotalPoints = record.totalPoints;
+    output[record._id.userId] = position;
+    return output;
+  }, {});
+};
+
+const retrievePositionLabel = (
+  previousPositionById: { [key: string]: number },
+  record: UserPointsGroup,
+  position: number,
+): string => {
+  const previousPosition: number = previousPositionById[record._id.userId];
+  if (!previousPosition || previousPosition === position) {
+    return `\u200b\n${position} <:small_orange_unchanged:883800059962097724>\n`
+  } else if (previousPosition > position) {
+    return `\u200b\n${position} <:small_green_triangle:883771002700587059>\n`
+  } else {
+    return `\u200b\n${position} :small_red_triangle_down:\n`
   }
 };
 

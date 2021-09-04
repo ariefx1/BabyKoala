@@ -1,25 +1,26 @@
-import { Client, ClientOptions } from "discord.js";
+import { Client, Intents } from "discord.js";
 import { readdirSync } from "fs";
 import { join } from "path";
 import { commands } from "./commands/base-command";
 
-const discordToken: string | undefined = process.env.DISCORD_TOKEN;
+const DISCORD_TOKEN: string = process.env.DISCORD_TOKEN!;
+export const DISCORD_CLIENT_ID: string = process.env.DISCORD_CLIENT_ID!;
 
-if (!discordToken) {
+if (!DISCORD_TOKEN) {
   throw new Error('Discord: Token is not provided');
 }
 
 // Discord Client
-const options: ClientOptions = {
+const _discordClient = new Client({
   intents: [
     // Privileged Gateway Intents
-    'GUILD_MEMBERS',
+    Intents.FLAGS.GUILD_MEMBERS,
     // Non-privileged Gateway Intents
-    'GUILDS',
-    'GUILD_MESSAGES',
+    Intents.FLAGS.GUILDS,
+    Intents.FLAGS.GUILD_MESSAGES,
+    Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
   ],
-};
-const _discordClient = new Client(options);
+});
 export const discordClient = _discordClient;
 
 // Commands
@@ -42,7 +43,7 @@ readdirSync(eventDir).forEach((eventFilename: string) => {
 
 export const discordClientConnect = async () => {
   try {
-    await _discordClient.login(discordToken!);
+    await _discordClient.login(DISCORD_TOKEN!);
   } catch (error: any) {
     console.log(`Discord: ${error}`);
   }

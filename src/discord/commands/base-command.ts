@@ -1,7 +1,4 @@
 import { ApplicationCommandOptionData, CommandInteraction } from "discord.js";
-import { join } from "path";
-import LeaderboardCommand from "./leaderboard-command";
-import UserCommand from "./user-command";
 
 export default interface BaseCommand {
   readonly name: string;

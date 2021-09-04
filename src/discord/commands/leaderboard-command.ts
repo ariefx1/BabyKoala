@@ -1,7 +1,11 @@
-import { ApplicationCommandOptionData, CommandInteraction, InteractionReplyOptions } from 'discord.js';
-import { queryLeaderboard, querySettings } from '../../mongo/queries';
-import { MASTER_ID, queryDiscordCommitteeIds } from '../queries';
-import BaseCommand from './base-command';
+import {
+  ApplicationCommandOptionData,
+  CommandInteraction,
+  InteractionReplyOptions,
+  Message,
+} from 'discord.js';
+import { queryDiscordLeaderboard } from '../queries';
+import BaseCommand, { PagingEmoji } from './base-command';
 
 export default class LeaderboardCommand implements BaseCommand {
   public readonly name: string = 'leaderboard';
@@ -15,16 +19,14 @@ export default class LeaderboardCommand implements BaseCommand {
 
   public async execute(interaction: CommandInteraction): Promise<void> {
     try {
-      await interaction.deferReply({ ephemeral: true });
-      const t0 = performance.now();
-      const { seasonStartDate } = await querySettings();
-      const committeeIds: string[] = await queryDiscordCommitteeIds();
-      const ephemeral: boolean = interaction.user.id !== MASTER_ID && !committeeIds.includes(interaction.user.id);
+      await interaction.deferReply();
       const game = interaction.options.get('game')!.value! as string;
-      const output: InteractionReplyOptions = await queryLeaderboard(game, seasonStartDate, ephemeral);
-      const t1 = performance.now();
-      await interaction.editReply(`Query took ${t1 - t0}ms`);
-      await interaction.followUp(output);
+      const output: InteractionReplyOptions = await queryDiscordLeaderboard(game, 1);
+      const message = await interaction.editReply(output) as Message;
+      await message.react(PagingEmoji.First);
+      await message.react(PagingEmoji.Previous);
+      await message.react(PagingEmoji.Next);
+      await message.react(PagingEmoji.Last);
     } catch (error: any) {
       console.log(`Discord: ${error}`);
       if (interaction.deferred || interaction.replied) {

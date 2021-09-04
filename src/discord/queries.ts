@@ -7,6 +7,8 @@ export const DISCORD_ERROR_MESSAGE = 'Sorry, data is not available or obsolete';
 export const USER_RECORD_COLOR = '#ffffff';
 export const RECORDS_PER_PAGE = 10;
 
+// #region Discord APIs
+
 export const queryDiscordMembers = async () => {
   const guild: Guild = discordClient.guilds.cache.first()!;
   const members: Collection<string, GuildMember> = await guild?.members.fetch()!;
@@ -31,17 +33,21 @@ export const queryDiscordCommitteeIds = async (): Promise<string[]> => {
   }, []);
 };
 
-export const queryServerMetadata = async (): Promise<{ iconURL: string, name: string }> => {
+export const queryDiscordGuildMetadata = async (): Promise<{ iconURL: string, name: string }> => {
   const guild: Guild = discordClient.guilds.cache.first()!;
   return { iconURL: guild.iconURL() ?? '', name: guild.name };
 };
 
-export const queryUserIdByTag = async (tag: string): Promise<string | undefined> => {
+export const queryDiscordUserIdByTag = async (tag: string): Promise<string | undefined> => {
   const currentMembers: Collection<string, GuildMember> = await queryDiscordMembers();
   return currentMembers.find(m => m.user.tag === tag)?.user.id;
 }
 
-export const queryLeaderboard = async (game: string, page: number): Promise<InteractionReplyOptions> => {
+// #endregion Discord APIs
+
+// #region Commands
+
+export const queryDiscordLeaderboard = async (game: string, page: number): Promise<InteractionReplyOptions> => {
   try {
     // NOTE: Some members might have left the guild, do not use limit and skip
     const dbLeaderboard: UserPointsGroup[] = await queryDBLeaderboard(game);
@@ -78,7 +84,7 @@ export const queryLeaderboard = async (game: string, page: number): Promise<Inte
 
     const totalPages = Math.ceil(count / RECORDS_PER_PAGE);
     const { color, logo } = await queryGameMetadata(game);
-    const { name, iconURL } = await queryServerMetadata();
+    const { name, iconURL } = await queryDiscordGuildMetadata();
     return { embeds: [
       new MessageEmbed()
         .setColor(color)
@@ -99,7 +105,7 @@ export const queryLeaderboard = async (game: string, page: number): Promise<Inte
   }
 };
 
-export const queryUserRecord = async (
+export const queryDiscordUserRecord = async (
   id: string,
   game: string,
   page: number,
@@ -146,3 +152,5 @@ export const queryUserRecord = async (
     return { embeds: [ new MessageEmbed().setTitle(DISCORD_ERROR_MESSAGE) ] };
   }
 };
+
+// #endregion Commands

@@ -10,7 +10,13 @@ import {
 } from 'discord.js';
 import { DISCORD_CLIENT_ID } from '../client';
 import { PagingEmoji } from '../commands/base-command';
-import { DISCORD_ERROR_MESSAGE, queryLeaderboard, queryUserIdByTag, queryUserRecord, USER_RECORD_COLOR } from '../queries';
+import {
+  DISCORD_ERROR_MESSAGE,
+  queryDiscordLeaderboard,
+  queryDiscordUserIdByTag,
+  queryDiscordUserRecord,
+  USER_RECORD_COLOR
+} from '../queries';
 import BaseEvent from './base-event';
 
 export default class MessageReactionAddEvent implements BaseEvent {
@@ -115,7 +121,7 @@ export default class MessageReactionAddEvent implements BaseEvent {
     game: string,
     page: number,
   ): Promise<InteractionReplyOptions> {
-    return await queryLeaderboard(game, page);
+    return await queryDiscordLeaderboard(game, page);
   }
 
   private static async pageUserRecord(
@@ -123,8 +129,8 @@ export default class MessageReactionAddEvent implements BaseEvent {
     game: string,
     page: number,
   ): Promise<WebhookEditMessageOptions> {
-    const userId: string | undefined = await queryUserIdByTag(message.embeds[0].author!.name!);
+    const userId: string | undefined = await queryDiscordUserIdByTag(message.embeds[0].author!.name!);
     if (!userId) throw 'User not found';
-    return await queryUserRecord(userId, game, page);
+    return await queryDiscordUserRecord(userId, game, page);
   }
 }

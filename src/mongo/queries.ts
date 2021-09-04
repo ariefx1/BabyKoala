@@ -1,5 +1,5 @@
 import { Collection, Db } from 'mongodb';
-import { queryUserByIds } from '../discord/queries';
+import { RECORDS_PER_PAGE } from '../discord/queries';
 import { mongoClient } from './client';
 import {
   DATABASE_NAME,
@@ -12,7 +12,7 @@ import {
   USER_POINTS_COLLECTION,
   USERS_COLLECTION,
 } from './documents';
-import { ColorResolvable, MessageEmbed, WebhookEditMessageOptions } from 'discord.js';
+import { ColorResolvable } from 'discord.js';
 
 // #region Shared Variables
 
@@ -58,20 +58,20 @@ export const writeUsers = async (idsToInsert: string[], idsToDelete: string[]): 
   }
 };
 
-export const queryGameMetadata = async (name: string): Promise<{ color: ColorResolvable, logo: string }> => {
+export const queryGameMetadata = async (name: string): Promise<{ name?: string, color: ColorResolvable, logo: string }> => {
   const game: Game | undefined = await gamesCollection
     .findOne({ name: new RegExp(['^', name, '$'].join(''), 'i'), });
-  return { color: (game?.color ?? '') as ColorResolvable, logo: game?.logo ?? '' };
+  return { name: game?.name, color: (game?.color ?? '') as ColorResolvable, logo: game?.logo ?? '' };
 };
 
 // #endregion Collections
 
 // #region Commands
 
-export const queryDBLeaderboard = async (game: string, page: number): Promise<UserPointsGroup[]> => {
+export const queryDBLeaderboard = async (game: string): Promise<UserPointsGroup[]> => {
   const { seasonStartDate } = await querySettings();
   // NOTE: Some members might have left the guild, do not use limit and skip
-  return await userPointsCollection.aggregate([
+  return userPointsCollection.aggregate([
     // Filter out records prior to the seasonStartDate
     { $match: { date: { $gte: seasonStartDate }, $text: { $search: game } } },
     // Group by userId and game, and summarize total count as totalPoints per group
@@ -81,49 +81,29 @@ export const queryDBLeaderboard = async (game: string, page: number): Promise<Us
   ]).toArray();
 };
 
-export const queryUserRecord = async (
+export const queryDBUserPoints = async (
   id: string,
   game: string,
-  page: number,
-): Promise<WebhookEditMessageOptions> => {
-  try {
-    // Retrieve user
-    const [user] = await queryUserByIds([id]);
-    if (!user.tag) throw 'User is not a member';
-
-    // Get user points
-    const userPoints = await userPointsCollection.find({
-      userId: id,
-      game: new RegExp(['^', game, '$'].join(''), 'i'),
-    }).toArray();
-    
-    const dates: string[] = [];
-    const descriptions: string[] = [];
-    const points: number[] = [];
-    userPoints.forEach(({ date, description, count }) => {
-      dates.push(date.toLocaleDateString('en-MY'));
-      descriptions.push(description);
-      points.push(count);
-    });
-    const { color, logo } = await queryGameMetadata(game);
-
-    return { embeds: [
-      new MessageEmbed()
-        .setColor(color)
-        .setAuthor(user.tag, user.avatarURL)
-        .setThumbnail(logo)
-        .addFields(
-          { name: '\u200b\nDate', value: dates.join('\n'), inline: true },
-          { name: '\u200b\nDescription', value: descriptions.join('\n'), inline: true },
-          { name: '\u200b\nPoints', value: points.join('\n'), inline: true },
-          { value: '\u200b', name: `Total Points: ${points.reduce((x, y) => x + y).toString()}` },
-        )
-        .setTimestamp()
-    ] };
-  } catch (error: any) {
-    console.log(`Mongo: ${error}`);
-    return { content: 'Sorry, data is not available' };
-  }
-};
+  page: number
+): Promise<[UserPoint[], number, number]> => {
+  const userPointsPromise: Promise<UserPoint[]> = userPointsCollection.aggregate([
+    // Filter out records for other games
+    { $match: { userId: id, $text: { $search: game } } },
+    // Sort date in descending order
+    { $sort: { date: -1 } },
+    // Skip records in previous pages
+    { $skip: RECORDS_PER_PAGE * (page - 1) },
+    // Limit current page's number of records
+    { $limit: RECORDS_PER_PAGE },
+  ]).toArray();
+  const userStatsPromise: Promise<any> = userPointsCollection.aggregate([
+    // Filter out records for other games
+    { $match: { userId: id, $text: { $search: game } } },
+    { $group: { _id: null, userPointsCount: { $sum: 1 }, totalPoints: { $sum: '$count' } } },
+    { $project: { _id: 0 } },
+  ]).next();
+  const [userPoints, userStats] = await Promise.all([userPointsPromise, userStatsPromise]);
+  return [userPoints, userStats.userPointsCount, userStats.totalPoints];
+}
 
 // #endregion Commands

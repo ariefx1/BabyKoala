@@ -1,5 +1,12 @@
 import { ApplicationCommandOptionData, CommandInteraction } from "discord.js";
 
+export enum PagingEmoji {
+  First = '⏮️',
+  Previous = '◀️',
+  Next = '▶️',
+  Last = '⏭️',
+}
+
 export default interface BaseCommand {
   readonly name: string;
   readonly description: string;

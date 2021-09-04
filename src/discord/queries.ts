@@ -1,17 +1,25 @@
-import { Collection, Guild, GuildMember, InteractionReplyOptions, MessageEmbed } from 'discord.js';
-import { queryDBLeaderboard, queryGameMetadata, querySettings, UserPointsGroup } from '../mongo/queries';
+import { Collection, Guild, GuildMember, InteractionReplyOptions, MessageEmbed, WebhookEditMessageOptions } from 'discord.js';
+import { queryDBLeaderboard, queryDBUserPoints, queryGameMetadata, querySettings, UserPointsGroup } from '../mongo/queries';
 import { discordClient } from './client';
 
 export const MASTER_ID = '280167443832373258';
 export const DISCORD_ERROR_MESSAGE = 'Sorry, data is not available or obsolete';
-
-const USERS_PER_PAGE = 10;
+export const USER_RECORD_COLOR = '#ffffff';
+export const RECORDS_PER_PAGE = 10;
 
 export const queryDiscordMembers = async () => {
   const guild: Guild = discordClient.guilds.cache.first()!;
   const members: Collection<string, GuildMember> = await guild?.members.fetch()!;
   const { memberRole } = await querySettings();
   return members.filter(user => !!user.roles.cache.find(x => x.name === memberRole));
+};
+
+export const queryDiscordMembersByIds = async (ids: string[]): Promise<{ avatarURL: string, tag?: string }[]> => {
+  const currentMembers: Collection<string, GuildMember> = await queryDiscordMembers();
+  return ids.map(id => { 
+    const user = currentMembers.get(id)?.user;
+    return { avatarURL: user?.avatarURL() ?? '', tag: user?.tag };
+  });
 };
 
 export const queryDiscordCommitteeIds = async (): Promise<string[]> => {
@@ -33,18 +41,10 @@ export const queryUserIdByTag = async (tag: string): Promise<string | undefined>
   return currentMembers.find(m => m.user.tag === tag)?.user.id;
 }
 
-export const queryUserByIds = async (ids: string[]): Promise<{ avatarURL: string, tag?: string }[]> => {
-  const currentMembers: Collection<string, GuildMember> = await queryDiscordMembers();
-  return ids.map(id => { 
-    const user = currentMembers.get(id)?.user;
-    return { avatarURL: user?.avatarURL() ?? '', tag: user?.tag };
-  });
-};
-
 export const queryLeaderboard = async (game: string, page: number): Promise<InteractionReplyOptions> => {
   try {
     // NOTE: Some members might have left the guild, do not use limit and skip
-    const dbLeaderboard: UserPointsGroup[] = await queryDBLeaderboard(game, page);
+    const dbLeaderboard: UserPointsGroup[] = await queryDBLeaderboard(game);
 
     if (dbLeaderboard.length === 0) throw 'No user points found';
 
@@ -69,21 +69,21 @@ export const queryLeaderboard = async (game: string, page: number): Promise<Inte
       if (record.totalPoints < previousTotalPoints) position++;
       previousTotalPoints = record.totalPoints;
       // Verify that user is on the current page
-      if (Math.ceil(count / USERS_PER_PAGE) !== page) return;
+      if (Math.ceil(count / RECORDS_PER_PAGE) !== page) return;
       // Add user to leaderboard
       positions += `${position}\n`;
       userTags += `${userTag}\n`;
       totalPoints += `${record.totalPoints}\n`;
     }, []);
 
-    const totalPages = Math.ceil(count / USERS_PER_PAGE);
+    const totalPages = Math.ceil(count / RECORDS_PER_PAGE);
     const { color, logo } = await queryGameMetadata(game);
     const { name, iconURL } = await queryServerMetadata();
     return { embeds: [
       new MessageEmbed()
         .setColor(color)
-        .setTitle(`Leaderboard: ${game}\n\u200b`)
         .setAuthor(name, iconURL)
+        .setTitle(`Game: ${game}\n\u200b`)
         .setThumbnail(logo)
         .addFields(
           { name: 'Position', value: positions, inline: true },
@@ -91,6 +91,54 @@ export const queryLeaderboard = async (game: string, page: number): Promise<Inte
           { name: 'Total Points', value: `${totalPoints}\n\u200b`, inline: true },
         )
         .setFooter(`Page ${page} of ${totalPages}`)
+        .setTimestamp()
+    ] };
+  } catch (error: any) {
+    console.log('Discord: ', Error);
+    return { embeds: [ new MessageEmbed().setTitle(DISCORD_ERROR_MESSAGE) ] };
+  }
+};
+
+export const queryUserRecord = async (
+  id: string,
+  game: string,
+  page: number,
+): Promise<WebhookEditMessageOptions> => {
+  try {
+    // Retrieve user
+    const [user] = await queryDiscordMembersByIds([id]);
+    if (!user.tag) throw 'User is not a member';
+
+    const [userPoints, userPointsCount, totalPoints] = await queryDBUserPoints(id, game, page);
+
+    if (userPoints.length === 0) throw 'No user points found';
+
+    // Build User Record
+    let dates: string = '';
+    let descriptions: string = '';
+    let points: string = '';
+    userPoints.forEach(({ date, description, count }) => {
+      dates += `${date.toLocaleDateString('en-MY')}\n`;
+      descriptions += `${description}\n`;
+      points += `${count}\n`;
+    });
+    const { name, logo } = await queryGameMetadata(game);
+    if (name) game = name;
+    const lastPage = Math.ceil(userPointsCount / RECORDS_PER_PAGE);
+
+    return { embeds: [
+      new MessageEmbed()
+        .setColor(USER_RECORD_COLOR)
+        .setAuthor(user.tag, user.avatarURL)
+        .setTitle(`Game: ${game}`)
+        .setThumbnail(logo)
+        .addFields(
+          { name: '\u200b\nDate', value: dates, inline: true },
+          { name: '\u200b\nDescription', value: descriptions, inline: true },
+          { name: '\u200b\nPoints', value: points, inline: true },
+          { value: '\u200b', name: `Total Points: ${totalPoints}` },
+        )
+        .setFooter(`Page ${page} of ${lastPage}`)
         .setTimestamp()
     ] };
   } catch (error: any) {

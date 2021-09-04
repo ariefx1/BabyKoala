@@ -8,10 +8,9 @@ import {
   User,
   WebhookEditMessageOptions
 } from 'discord.js';
-import { queryUserRecord } from '../../mongo/queries';
 import { DISCORD_CLIENT_ID } from '../client';
-import { PagingEmoji } from '../commands/leaderboard-command';
-import { DISCORD_ERROR_MESSAGE, queryLeaderboard, queryUserIdByTag } from '../queries';
+import { PagingEmoji } from '../commands/base-command';
+import { DISCORD_ERROR_MESSAGE, queryLeaderboard, queryUserIdByTag, queryUserRecord, USER_RECORD_COLOR } from '../queries';
 import BaseEvent from './base-event';
 
 export default class MessageReactionAddEvent implements BaseEvent {
@@ -70,15 +69,14 @@ export default class MessageReactionAddEvent implements BaseEvent {
       console.log('Discord: ', error);
     }
   }
-  
+
   private static isValid(reaction: MessageReaction | PartialMessageReaction): boolean {
     return reaction.message.embeds[0].title !== DISCORD_ERROR_MESSAGE;
   }
 
   private static isLeaderboardPaging(reaction: MessageReaction | PartialMessageReaction): boolean {
-    return reaction.message.embeds[0].hexColor !== '#FFFFFF';
+    return reaction.message.embeds[0].hexColor !== USER_RECORD_COLOR;
   }
-  
 
   private static async page(
     message: Message | PartialMessage,
@@ -86,16 +84,12 @@ export default class MessageReactionAddEvent implements BaseEvent {
     pageHandler: (...args: any) => Promise<InteractionReplyOptions | WebhookEditMessageOptions>,
   ): Promise<void> {
     const footer: string = message.embeds[0].footer!.text!;
-    
-    // TODO: Use RegEx
     const [currentPage, lastPage] = footer.replace('Page ', '').split(' of ').map(p => Number(p));
     if (lastPage === 1) return;
     if (currentPage === 1 && emoji !== PagingEmoji.Next && emoji !== PagingEmoji.Last) return;
     if (currentPage === lastPage && emoji !== PagingEmoji.Previous && emoji !== PagingEmoji.First) return;
 
-    // TODO: Use RegEx
-    const game: string = message.embeds![0].title!.split('\n')[0].split(': ')[1];
-    
+    const game: string = message.embeds![0].title!.replace('Game: ', '');
     let page: number;
     switch (emoji) {
       case PagingEmoji.First:
@@ -113,7 +107,6 @@ export default class MessageReactionAddEvent implements BaseEvent {
       default:
         page = 1;
     }
-
     await message.edit(await pageHandler(message, game, page)!);
   }
 

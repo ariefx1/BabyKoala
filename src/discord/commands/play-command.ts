@@ -1,8 +1,13 @@
 import { ApplicationCommandOptionData, CommandInteraction } from 'discord.js';
-import { MASTER_ID } from '../queries';
 import BaseCommand from './base-command';
 import { validateURL } from 'ytdl-core';
-import { enqueuePlaylist, enqueueSearchResult, enqueueSong, initVoiceConnection, subscriptions, validatePlaylistURL } from '../music/utils';
+import {
+  enqueuePlaylist,
+  enqueueSearchResult,
+  enqueueSong,
+  initVoiceConnection,
+  validatePlaylistURL,
+} from '../music/utils';
 import { MusicSubscription } from '../music/subscription';
 
 export default class UserCommand implements BaseCommand {
@@ -16,11 +21,6 @@ export default class UserCommand implements BaseCommand {
   }];
 
   public async execute(interaction: CommandInteraction): Promise<void> {
-    if (interaction.user.id !== MASTER_ID) {
-      await interaction.reply('In Development');
-      return;
-    }
-
     try {
       await interaction.deferReply();
       const songQuery = interaction.options.get('song')!.value! as string;

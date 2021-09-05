@@ -2,7 +2,6 @@ import { Collection, Guild, GuildMember, InteractionReplyOptions, MessageEmbed, 
 import { queryDBLeaderboard, queryDBUserPoints, queryGameMetadata, querySettings, UserPointsGroup } from '../mongo/queries';
 import { discordClient } from './client';
 
-export const MASTER_ID = '280167443832373258';
 export const DISCORD_ERROR_MESSAGE = 'Sorry, data is not available or obsolete';
 export const USER_RECORD_COLOR = '#ffffff';
 export const RECORDS_PER_PAGE = 15;
@@ -18,7 +17,7 @@ export const queryDiscordMembers = async () => {
 
 export const queryDiscordMembersByIds = async (ids: string[]): Promise<{ avatarURL: string, tag?: string }[]> => {
   const currentMembers: Collection<string, GuildMember> = await queryDiscordMembers();
-  return ids.map(id => { 
+  return ids.map(id => {
     const user = currentMembers.get(id)?.user;
     return { avatarURL: user?.avatarURL() ?? '', tag: user?.tag };
   });
@@ -89,23 +88,25 @@ export const queryDiscordLeaderboard = async (game: string, page: number): Promi
     const totalPages: number = Math.ceil(count / RECORDS_PER_PAGE);
     const { color, logo } = await queryGameMetadata(game);
     const { name, iconURL } = await queryDiscordGuildMetadata();
-    return { embeds: [
-      new MessageEmbed()
-        .setColor(color)
-        .setAuthor(name, iconURL)
-        .setTitle(`Game: ${game}\n\u200b`)
-        .setThumbnail(logo)
-        .addFields(
-          { name: 'Position', value: positions, inline: true },
-          { name: 'Tag', value: userTags, inline: true },
-          { name: 'Total Points', value: `${totalPoints}\n\u200b`, inline: true },
-        )
-        .setFooter(`Page ${page} of ${totalPages}`)
-        .setTimestamp()
-    ] };
+    return {
+      embeds: [
+        new MessageEmbed()
+          .setColor(color)
+          .setAuthor(name, iconURL)
+          .setTitle(`Game: ${game}\n\u200b`)
+          .setThumbnail(logo)
+          .addFields(
+            { name: 'Position', value: positions, inline: true },
+            { name: 'Tag', value: userTags, inline: true },
+            { name: 'Total Points', value: `${totalPoints}\n\u200b`, inline: true },
+          )
+          .setFooter(`Page ${page} of ${totalPages}`)
+          .setTimestamp()
+      ]
+    };
   } catch (error: any) {
     console.log('Discord: ', Error);
-    return { embeds: [ new MessageEmbed().setTitle(DISCORD_ERROR_MESSAGE) ] };
+    return { embeds: [new MessageEmbed().setTitle(DISCORD_ERROR_MESSAGE)] };
   }
 };
 
@@ -172,24 +173,26 @@ export const queryDiscordUserRecord = async (
     const { logo } = await queryGameMetadata(game);
     const lastPage = Math.ceil(userPointsCount / RECORDS_PER_PAGE);
 
-    return { embeds: [
-      new MessageEmbed()
-        .setColor(USER_RECORD_COLOR)
-        .setAuthor(user.tag, user.avatarURL)
-        .setTitle(`Game: ${game}`)
-        .setThumbnail(logo)
-        .addFields(
-          { name: '\u200b\nDate', value: dates, inline: true },
-          { name: '\u200b\nDescription', value: descriptions, inline: true },
-          { name: '\u200b\nPoints', value: points, inline: true },
-          { value: '\u200b', name: `Total Points: ${totalPoints}` },
-        )
-        .setFooter(`Page ${page} of ${lastPage}`)
-        .setTimestamp()
-    ] };
+    return {
+      embeds: [
+        new MessageEmbed()
+          .setColor(USER_RECORD_COLOR)
+          .setAuthor(user.tag, user.avatarURL)
+          .setTitle(`Game: ${game}`)
+          .setThumbnail(logo)
+          .addFields(
+            { name: '\u200b\nDate', value: dates, inline: true },
+            { name: '\u200b\nDescription', value: descriptions, inline: true },
+            { name: '\u200b\nPoints', value: points, inline: true },
+            { value: '\u200b', name: `Total Points: ${totalPoints}` },
+          )
+          .setFooter(`Page ${page} of ${lastPage}`)
+          .setTimestamp()
+      ]
+    };
   } catch (error: any) {
     console.log('Discord: ', Error);
-    return { embeds: [ new MessageEmbed().setTitle(DISCORD_ERROR_MESSAGE) ] };
+    return { embeds: [new MessageEmbed().setTitle(DISCORD_ERROR_MESSAGE)] };
   }
 };
 

@@ -113,8 +113,6 @@ export const enqueuePlaylist = async (
 ): Promise<void> => {
   try {
     const playlistID: string = getPlaylistID(playlistQuery);
-    console.log('playlistID', playlistID);
-
     const playlist: PlaylistMetadataResult = await search({ listId: playlistID });
     const urls: string[] = playlist.videos.map((item: PlaylistItem) => urlPrefix + item.videoId);
     for (let url of urls) {

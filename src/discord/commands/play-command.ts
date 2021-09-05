@@ -39,7 +39,7 @@ export default class UserCommand implements BaseCommand {
       } else if (validateURL(songQuery)) {
         await enqueueSong(interaction, subscription, songQuery);
       } else {
-        enqueueSearchResult(interaction, subscription, songQuery);
+        await enqueueSearchResult(interaction, subscription, songQuery);
       }
     } catch (error: any) {
       console.log(`Discord: ${error}`);

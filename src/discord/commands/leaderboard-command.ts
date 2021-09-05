@@ -6,6 +6,7 @@ import {
 } from 'discord.js';
 import { queryDiscordLeaderboard } from '../queries';
 import BaseCommand, { PagingEmoji } from './base-command';
+import { resolveGame } from '../../mongo/game.alias';
 
 export default class LeaderboardCommand implements BaseCommand {
   public readonly name: string = 'leaderboard';
@@ -21,7 +22,9 @@ export default class LeaderboardCommand implements BaseCommand {
     try {
       await interaction.deferReply();
       const game = interaction.options.get('game')!.value! as string;
-      const output: InteractionReplyOptions = await queryDiscordLeaderboard(game, 1);
+      const gameName = resolveGame(game);
+      if (!gameName) throw 'Game not found';
+      const output: InteractionReplyOptions = await queryDiscordLeaderboard(gameName, 1);
       const message = await interaction.editReply(output) as Message;
       await message.react(PagingEmoji.First);
       await message.react(PagingEmoji.Previous);

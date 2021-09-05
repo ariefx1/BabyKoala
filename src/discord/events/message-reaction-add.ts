@@ -93,7 +93,7 @@ export default class MessageReactionAddEvent implements BaseEvent {
     if (currentPage === 1 && emoji !== PagingEmoji.Next && emoji !== PagingEmoji.Last) return;
     if (currentPage === lastPage && emoji !== PagingEmoji.Previous && emoji !== PagingEmoji.First) return;
 
-    const game: string = message.embeds![0].title!.replace('Game: ', '');
+    const gameName: string = message.embeds![0].title!.replace('Game: ', '');
     let page: number;
     switch (emoji) {
       case PagingEmoji.First:
@@ -111,7 +111,7 @@ export default class MessageReactionAddEvent implements BaseEvent {
       default:
         page = 1;
     }
-    await message.edit(await pageHandler(message, game, page)!);
+    await message.edit(await pageHandler(message, gameName, page)!);
   }
 
   private static async pageLeaderboard(

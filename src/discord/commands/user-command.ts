@@ -6,6 +6,7 @@ import {
 } from 'discord.js';
 import { queryDiscordUserRecord } from '../queries';
 import BaseCommand, { PagingEmoji } from './base-command';
+import { resolveGame } from '../../mongo/game.alias';
 
 export default class UserCommand implements BaseCommand {
   public readonly name: string = 'user';
@@ -22,7 +23,9 @@ export default class UserCommand implements BaseCommand {
       await interaction.deferReply();
       const userId: string = interaction.user.id;
       const game = interaction.options.get('game')!.value! as string;
-      const output: WebhookEditMessageOptions = await queryDiscordUserRecord(userId, game, 1);
+      const gameName = resolveGame(game);
+      if (!gameName) throw 'Game not found';
+      const output: WebhookEditMessageOptions = await queryDiscordUserRecord(userId, gameName, 1);
       const message = await interaction.editReply(output) as Message;
       await message.react(PagingEmoji.First);
       await message.react(PagingEmoji.Previous);

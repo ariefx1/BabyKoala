@@ -115,13 +115,18 @@ export const enqueuePlaylist = async (
     const playlistID: string = getPlaylistID(playlistQuery);
     const playlist: PlaylistMetadataResult = await search({ listId: playlistID });
     const urls: string[] = playlist.videos.map((item: PlaylistItem) => urlPrefix + item.videoId);
+    let count: number = 0;
     for (let url of urls) {
-      await enqueue(interaction, subscription, url);
+      try {
+        await enqueue(interaction, subscription, url);
+        count++;
+      } catch (_error) { }
     }
+    if (count === 0) throw 'Invalid songs in playlist';
     await interaction.editReply(`Enqueued **${playlist.title}**`);
   } catch (error) {
     console.warn(error);
-    await interaction.editReply('Failed to play track, please try again later!');
+    await interaction.editReply('Failed to play playlist, please try again later!');
   }
 };
 

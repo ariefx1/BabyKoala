@@ -10,7 +10,7 @@ import {
 } from '../music/utils';
 import { MusicSubscription } from '../music/subscription';
 
-export default class UserCommand implements BaseCommand {
+export default class PlayCommand implements BaseCommand {
   public readonly name: string = 'play';
   public readonly description: string = 'Plays a song or playlist';
   public readonly options: ApplicationCommandOptionData[] = [{

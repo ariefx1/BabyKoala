@@ -72,6 +72,7 @@ export const queryDBLeaderboard = async (game: string, excludeLast: boolean = fa
   let endDate: Date | undefined;
   if (excludeLast) {
     const { latestDate }: any = await userPointsCollection.aggregate([
+      { $match: { date: { $gte: seasonStartDate }, $text: { $search: game } } },
       { $group: { _id: null, latestDate: { $max: '$date' } } },
       { $project: { _id: 0 } },
     ]).next();
@@ -80,9 +81,11 @@ export const queryDBLeaderboard = async (game: string, excludeLast: boolean = fa
   // NOTE: Some members might have left the guild, do not use limit and skip
   return userPointsCollection.aggregate([
     // Filter out records prior to the seasonStartDate
-    { $match: {
-      date: { $gte: seasonStartDate, ...(endDate ? { $lt: endDate } : {}) },
-      $text: { $search: game } }
+    {
+      $match: {
+        date: { $gte: seasonStartDate, ...(endDate ? { $lt: endDate } : {}) },
+        $text: { $search: game }
+      }
     },
     // Group by userId and game, and summarize total count as totalPoints per group
     { $group: { _id: { userId: '$userId', game: '$game' }, totalPoints: { $sum: '$count' } } },
